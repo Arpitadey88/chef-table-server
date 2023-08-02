@@ -7,6 +7,7 @@ const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
 // middleware
+
 app.use(cors());
 app.use(express.json());
 
@@ -127,6 +128,7 @@ async function run() {
         // menu related apis
         app.get('/menu', async (req, res) => {
             const result = await menuCollection.find().toArray();
+            // console.log('menu-item', result);
             res.send(result);
         })
         app.post('/menu', verifyJWT, verifyAdmin, async (req, res) => {
@@ -140,6 +142,48 @@ async function run() {
             const result = await menuCollection.deleteOne(query);
             res.send(result);
         })
+        // for update menu item
+        app.get('/menu/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await menuCollection.findOne(query);
+            console.log(result);
+            res.send(result);
+        })
+        app.put('/menu/:id', async (req, res) => {
+            const { id } = req.params;
+
+            try {
+                const updateData = { ...req.body };
+
+                await menuCollection.updateOne({ _id: new ObjectId(id) },
+                    { $set: updateData });
+
+                res.json({ message: 'Item updated successfully' });
+            } catch (error) {
+                console.error('Error updating item:', error);
+                res.status(500).json({ error: 'Failed to update item' });
+            }
+        });
+        // app.put('/menu/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const filter = { _id: new ObjectId(id) }
+        //     const options = { upsert: true };
+        //     const updatedItem = req.body;
+
+        //     const Item = {
+        //         $set: {
+        //             name: updatedItem.name,
+        //             price: updatedItem.price,
+        //             recipe: updatedItem.recipe,
+        //             category: updatedItem.category,
+        //             image: updatedItem.image
+        //         }
+        //     }
+
+        //     const result = await menuCollection.updateOne(filter, Item, options);
+        //     res.send(result);
+        // })
 
         // reviews related api
         app.get('/reviews', async (req, res) => {
